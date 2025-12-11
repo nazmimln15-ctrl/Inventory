@@ -13,83 +13,91 @@ class ItemController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $items = Item::all();
-        return ItemResource::collection($items);
+        $query = Item::query();
+
+
+        if ($request->has('stock_limit')) {
+            $query->where('stock', '<=', $request->stock_limit);
+        }
+
+        if ($request->has('keyword')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->keyword . '%')
+                    ->orWhere('code', 'like', '%' . $request->keyword . '%');
+            });
+        }
+
+        $items = $query->get();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Daftar Item .',
+            'data' => $items
+        ], 200);
     }
+
+//     public function index() {
+//     $items = Item::all();
+//     return response()->json($items);
+// }
+
+    // public function index()
+    // {
+    //     $items = Item::all();
+    //     return ItemResource::collection($items);
+    // }
 
     /**
      * Store a newly created resource in storage.
      */
+
     public function store(Request $request)
     {
-        // 1. Validasi Data
         $validatedData = $request->validate([
             'name' => 'required',
             'code' => 'required|unique:items,code',
             'stock' => 'nullable|integer',
             'price' => 'nullable|numeric',
         ]);
-         
+
 
         $item = Item::create($validatedData);
 
-        // Kembalikan Resource dengan status 201
-        return new ItemResource($item); 
+        return new ItemResource($item, 201);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Item $item)
+    public function show($id)
     {
-      return new ItemResource($item);
+        $item = Item::findOrFail($id);
+        return response()->json($item);
     }
+
+
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, $id)
     {
-        // 1. Temukan Item
-        // Kita gunakan findOrFail untuk memastikan item ada, jika tidak, otomatis Laravel akan melempar 404
         $item = Item::findOrFail($id);
-
-        // 2. Validasi Data
-        $validatedData = $request->validate([
-            'name' => 'sometimes|required', // 'sometimes' hanya validasi jika field dikirim
-            
-            // Penting: Abaikan ID item saat ini dari validasi 'unique'
-            'code' => 'sometimes|required|unique:items,code,' . $item->id,
-            
-            'stock' => 'nullable|integer',
-            'price' => 'nullable|numeric',
-            'unit' => 'nullable|string',      // Tambahkan validasi untuk field lain
-            'location' => 'nullable|string',  // Tambahkan validasi untuk field lain
-        ]);
-
-        // 3. Perbarui Database
-        $item->update($validatedData);
-
-        // 4. Kembalikan Response Sukses
-        return response()->json([
-            'message' => 'Barang berhasil diperbarui.',
-            'data' => $item
-        ], 200); // 200 OK
+        $item->update($request->all());
+        return response()->json($item, 200);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Item $item)
+
+    public function destroy($id)
     {
+        $item = Item::findOrFail($id);
         $item->delete();
-
-        // Kembalikan Response Sukses
-        return response()->json([
-            'message' => 'Produk berhasil dihapus.'
-        ], 204); // 204 No Content (Sukses tapi tidak ada body yang dikembalikan)
+        return response()->json(null, 204);
     }
-}
 
+}

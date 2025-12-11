@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Models\Item;
 use Illuminate\Http\Request;
 
@@ -36,7 +37,7 @@ class ItemController extends Controller
         ]);
         Item::create($request->all());
         return redirect()->route('items.index')
-        ->with('success', 'Barang berhasil ditambahkan');
+            ->with('success', 'Barang berhasil ditambahkan');
     }
 
     /**
@@ -68,7 +69,7 @@ class ItemController extends Controller
         ]);
         $item->update($request->all());
         return redirect()->route('items.index')
-        ->with('success', 'Data barang berhasil diupdate');
+            ->with('success', 'Data barang berhasil diupdate');
     }
 
     /**
@@ -78,6 +79,6 @@ class ItemController extends Controller
     {
         $item->delete();
         return redirect()->route('items.index')
-        ->with('success', 'Barang berhasil dihapus');
+            ->with('success', 'Barang berhasil dihapus');
     }
 }
